@@ -168,9 +168,11 @@ public class Day4
         // Check all directions
         foreach (Direction dir in Enum.GetValues(typeof(Direction)))
         {
+            _testOutputHelper.WriteLine("Checking direction: " + dir);
             (int newX, int newY) = GetNewCoordinates(x, y, dir);
             if (IsInBounds(grid, newX, newY) && grid[newX, newY] == nextChar && !visited[newX, newY])
             {
+                _testOutputHelper.WriteLine($"Found '{nextChar}' at ({newX}, {newY}) direction {dir}");
                 visited[newX, newY] = true; // Mark this cell as visited
                 SearchRecursive(grid, newX, newY, index + 1, visited); // Recur for the next character
                 visited[newX, newY] = false; // Unmark this cell after returning
