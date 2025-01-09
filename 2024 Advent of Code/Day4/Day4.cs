@@ -36,25 +36,7 @@ public class Day4
         Assert.Equal(18, foundCount);
         return Task.CompletedTask;
     }
-
-    private Queue<(int, int)> FindX(char[,] grid)
-    {
-        var queue = new Queue<(int, int)>();
-        for(var x = 0; x < grid.GetLength(0); x++)
-        {
-            for(var y = 0; y < grid.GetLength(1); y++)
-            {
-                // is this cell an 'X'?
-                if (grid[x, y] != 'X') continue;
-                queue.Enqueue((x,y));
-                
-            }
-        }
-        _testOutputHelper.WriteLine($"Found {queue.Count} X's");
-        return queue;
-    }
     
-
     // Helper method to get new coordinates based on direction
     private (int, int) GetNewCoordinates(int x, int y, Direction direction)
     {
@@ -83,8 +65,9 @@ public class Day4
     {
         var grid = BuildGrid(ReadInput());
 
-        var found = 0;
-        _testOutputHelper.WriteLine($"Found: {found}");
+        SearchForXMAS(grid);
+
+        _testOutputHelper.WriteLine($"Found: {foundCount}");
         return Task.CompletedTask;
     }
 
@@ -146,15 +129,18 @@ public class Day4
             {
                 if (grid[x, y] == 'X')
                 {
-                    // Start recursive search for "XMAS"
-                    SearchRecursive(grid, x, y, 1, new bool[grid.GetLength(0), grid.GetLength(1)]); // Start with the second character 'M'
+                    // Start searching in each direction from the 'X'
+                    foreach (Direction dir in Enum.GetValues(typeof(Direction)))
+                    {
+                        SearchInDirection(grid, x, y, 1, dir, new bool[grid.GetLength(0), grid.GetLength(1)]); // Start with the second character 'M'
+                    }
                 }
             }
         }
     }
 
-    // Recursive method to search for the next character in "XMAS"
-    private void SearchRecursive(char[,] grid, int x, int y, int index, bool[,] visited)
+    // Method to search in a specific direction
+    private void SearchInDirection(char[,] grid, int x, int y, int index, Direction direction, bool[,] visited)
     {
         if (index >= "XMAS".Length) // Base case: found all characters
         {
@@ -163,20 +149,14 @@ public class Day4
         }
 
         char nextChar = "XMAS"[index]; // Get the next character to find
-        _testOutputHelper.WriteLine($"Searching for '{nextChar}' from ({x}, {y}) at index {index}");
 
-        // Check all directions
-        foreach (Direction dir in Enum.GetValues(typeof(Direction)))
+        (int newX, int newY) = GetNewCoordinates(x, y, direction); // Get the new coordinates based on the direction
+
+        if (IsInBounds(grid, newX, newY) && grid[newX, newY] == nextChar && !visited[newX, newY])
         {
-            _testOutputHelper.WriteLine("Checking direction: " + dir);
-            (int newX, int newY) = GetNewCoordinates(x, y, dir);
-            if (IsInBounds(grid, newX, newY) && grid[newX, newY] == nextChar && !visited[newX, newY])
-            {
-                _testOutputHelper.WriteLine($"Found '{nextChar}' at ({newX}, {newY}) direction {dir}");
-                visited[newX, newY] = true; // Mark this cell as visited
-                SearchRecursive(grid, newX, newY, index + 1, visited); // Recur for the next character
-                visited[newX, newY] = false; // Unmark this cell after returning
-            }
+            visited[newX, newY] = true; // Mark this cell as visited
+            SearchInDirection(grid, newX, newY, index + 1, direction, visited); // Recur for the next character in the same direction
+            visited[newX, newY] = false; // Unmark this cell after returning
         }
     }
 }
