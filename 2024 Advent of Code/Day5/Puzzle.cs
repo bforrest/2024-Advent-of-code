@@ -23,22 +23,22 @@ public class Puzzle
         var input = Sample;
         var (rules, updates) = ParseInput(input);
 
+        var ruleBook = BuildRuleBook(rules);
+        _testOutputHelper.WriteLine($"Rules in the Rule Book: {ruleBook.Count}");
+        
         foreach (var update in updates)
         {
-            _testOutputHelper.WriteLine("Update: " + update);
-            // split to array
-            // for each number, check if it is in the rules
-            // see if order matches the rule(s)
             var pages = update.Split(",");
+            
+            var queue = new Queue<string>();
 
-            foreach (var item in pages)
+            foreach (var page in pages)
             {
-                var matchingRule = rules.Where(x => x.StartsWith(item));
-                foreach (var rule in matchingRule)
-                {
-                    _testOutputHelper.WriteLine($"Matching rule: {rule}");
-                }
+                queue.Enqueue(page);
             }
+            
+            
+            _testOutputHelper.WriteLine("Update: " + update);
         }
 
         return Task.CompletedTask;
@@ -100,4 +100,44 @@ public class Puzzle
         "61,13,29",
         "97,13,75,29,47"
     };
+    
+    public List<Rule> BuildRuleBook(List<string> rules)
+    {
+        var ruleBook = new List<Rule>();
+        foreach (var rule in rules)
+        {
+            var parts = rule.Split("|");
+            var page = parts[0];
+            var printBefore = parts[1];
+            var existingRule = ruleBook.FirstOrDefault(r => r.Page == page);
+            if(existingRule == null)
+            {
+                ruleBook.Add(new Rule(page, printBefore));
+            }
+            else
+            {
+                existingRule.AddPage(printBefore);
+            }
+        }
+
+        return ruleBook;
+    }
+
+    public class Rule
+    {
+        public Rule(string page, string printBefore)
+        {
+            Page = page;
+            PrintBefore.Add(printBefore);
+            Visited = false;
+        }
+
+        public string Page { get; init; }
+        private List<string> PrintBefore { get; set; } = new();
+        public bool Visited { get; set; }
+        public void AddPage(string page)
+        {
+            PrintBefore.Add(page);
+        }
+    }
 }
